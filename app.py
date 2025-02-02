@@ -114,6 +114,11 @@ class students_events(db.Model):
     entryno=db.Column(db.String(11))
     feedback=db.Column(db.Integer)
 
+class students_courses(db.Model):
+    srno=db.Column(db.Integer, primary_key=True)
+    course=db.Column(db.String(12))
+    entryno=db.Column(db.String(11))
+
 class course_events(db.Model):
     name = db.Column(db.String(40), primary_key=True)
     course = db.Column(db.String(40), nullable=False)
@@ -256,17 +261,34 @@ def kars_event():
     Events =events.query.filter(events.name.notin_(selected_event_names),db.func.datetime(events.date, events.starttime) >= current_time).all()
     return render_template('event.html',Events=Events)
 
-
-@app.route('/student/academic_schedule')
-def kars_schedule():
-    return render_template('academic_schedule.html')
-
 @app.route('/add_event/<string:name>')
 def add_event(name):
     add_to_students_events=students_events(event=name, entryno=user.entryno, feedback=0)
     db.session.add(add_to_students_events)
     db.session.commit()
     return redirect("/student/event")
+
+
+@app.route('/student/academic_schedule')
+def kars_schedule():
+    courseList = [selected_course.course for selected_course in students_courses.query.filter(students_courses.entryno==user.entryno).all()]
+    return render_template('academic_schedule.html',courseList=courseList)
+
+@app.route('/student/academic_schedule/remove_course/<string:name>')
+def remove_event(name):
+    course_remove=students_courses.query.filter(students_courses.entryno==user.entryno,students_courses.course==name).first()
+    db.session.delete(course_remove)
+    db.session.commit()
+    return redirect("/student/academic_schedule")
+
+
+@app.route('/student/academic_schedule/add_course', methods=['GET', 'POST'])
+def add_course():
+    name = request.form['courseName']
+    add_to_students_courses=students_courses(course=name, entryno=user.entryno)
+    db.session.add(add_to_students_courses)
+    db.session.commit()
+    return redirect('/student/academic_schedule')
 
 @app.route('/fest', methods=['GET', 'POST'])
 def kars_fest():

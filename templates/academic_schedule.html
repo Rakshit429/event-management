@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,6 +13,7 @@
             height: 100vh;
             background-color: #ffffff;
         }
+
         /* Sidebar */
         .sidebar {
             width: 250px;
@@ -23,10 +25,12 @@
             align-items: center;
             padding-top: 20px;
         }
+
         .sidebar img {
             width: 100px;
             margin-bottom: 20px;
         }
+
         .sidebar a {
             text-decoration: none;
             color: #fff;
@@ -35,6 +39,7 @@
             display: block;
             text-align: center;
         }
+
         .sidebar a:hover {
             background-color: #575b71;
             width: 100%;
@@ -107,6 +112,7 @@
         }
     </style>
 </head>
+
 <body>
     <!-- Sidebar -->
     <div class="sidebar">
@@ -120,33 +126,17 @@
     <div class="content">
         <h1>academic schedule</h1>
         <ul class="course-list" id="courseList">
-            <!-- Courses will appear here -->
+            {% for course in courseList %}
+            <li>{{course}}</li>
+            <a href="/student/academic_schedule/remove_course/{{course}}"><button type="button">removeCourse</button></a>
+            {% endfor %}
         </ul>
         <div class="add-course">
-            <input type="text" id="courseInput" placeholder="Enter course name">
-            <button onclick="addCourse()">Add Course</button>
+            <form action="/student/academic_schedule/add_course" method="POST">
+                <input type="text" id="courseInput" name="courseName" placeholder="Enter course name">
+                <button type="submit">Add Course</button>
+            </form>
         </div>
     </div>
-
-    <script>
-        const courseList = document.getElementById('courseList');
-
-        function addCourse() {
-            const courseInput = document.getElementById('courseInput');
-            const courseName = courseInput.value.trim();
-
-            if (courseName) {
-                const listItem = document.createElement('li');
-                listItem.innerHTML = `${courseName} <button onclick="removeCourse(this)">Remove</button>`;
-                courseList.appendChild(listItem);
-                courseInput.value = '';
-            }
-        }
-
-        function removeCourse(button) {
-            const listItem = button.parentElement;
-            courseList.removeChild(listItem);
-        }
-    </script>
 </body>
 </html>
