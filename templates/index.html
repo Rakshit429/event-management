@@ -1,0 +1,178 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login and Signup Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            width: 800px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .left-section {
+            background: #5D3FD3;
+            color: #fff;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .left-section h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .left-section p {
+            font-size: 1rem;
+            margin-bottom: 30px;
+        }
+
+        .form-container {
+            flex: 1;
+            padding: 40px;
+        }
+
+        .form-container h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .form-container form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-container input,
+        .form-container select {
+            margin-bottom: 15px;
+            padding: 10px;
+            font-size: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .form-container button {
+            padding: 10px;
+            font-size: 1rem;
+            color: #fff;
+            background: #5D3FD3;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .form-container button:hover {
+            background: #4a32a8;
+        }
+
+        .form-container a {
+            color: #5D3FD3;
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Left Section -->
+        <div class="left-section">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="My Photo" style="width: 100px; height: auto;">
+            <h1>Welcome to KARS</h1>
+            <p>event management software</p>
+        </div>
+
+        <!-- Right Section -->
+        <div class="form-container">
+            <!-- Login Form -->
+            <div id="login-section">
+                <h2>Login</h2>
+                <form action="/login" method="POST">
+                    <input type="email" name="email" placeholder="Email" required>
+                    <input type="password" name="password" placeholder="Password" required>
+                    <div class="form-group">
+                        <label>Role</label>
+                        <select name="role" required>
+                            <option value="student">Student</option>
+                            <option value="club">Club Executive</option>
+                            <option value="department">Department Head</option>
+                            <option value="fest">Fest Executive</option>
+                            <option value="course-coordinator">Course Coordinator</option>
+                        </select>
+                    </div>
+                    <button type="submit">Login</button>
+                    <a href="#" onclick="showSignup()">Don't have an account? Sign up</a>
+                </form>
+            </div>
+
+            <!-- Signup Form -->
+            <div id="signup-section" style="display: none;">
+                <h2>Sign Up</h2>
+                <form action="/" method="POST">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" name="password" required>
+                    </div>
+                    <label for="roles">roles:</label>
+                    <select id="roles" name="roles" multiple>
+                        <option value="student">student</option>
+                        <option value="club">Club Executive</option>
+                        <option value="department">Department Head</option>
+                        <option value="fest">Fest Executive</option>
+                        <option value="course-coordinator">Course Coordinator</option>
+                    </select>
+                    <a href="/verify-otp"><button type="submit" class="submit-btn">send otp </button></a>
+                    <a href="/" onclick="showLogin()">Already have an account? Login</a>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const loginSection = document.getElementById('login-section');
+        const signupSection = document.getElementById('signup-section');
+
+        function showSignup() {
+            loginSection.style.display = 'none';
+            signupSection.style.display = 'block';
+        }
+
+        function showLogin() {
+            signupSection.style.display = 'none';
+            loginSection.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

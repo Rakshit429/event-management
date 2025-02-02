@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Portal</title>
+    <!-- FullCalendar Styles -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+
+    <!-- FullCalendar Script -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
+    <style>
+        #calendar {
+            max-width: 100%;
+            margin: 20px auto;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 57vw;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background-color: #3f3d56;
+            color: #fff;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+        }
+
+        .sidebar img {
+            width: 100px;
+            margin-bottom: 20px;
+        }
+
+        .sidebar a {
+            text-decoration: none;
+            color: #fff;
+            margin: 15px 0;
+            font-size: 16px;
+            display: block;
+            text-align: center;
+        }
+
+        .sidebar a:hover {
+            background-color: #575b71;
+            width: 100%;
+        }
+
+        /* Main content */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            grid-gap: 20px;
+            position: relative;
+        }
+
+        .club-hours,
+        .recommended-events {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        .events-list,
+        .events-list ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .events-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .bar-chart {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            height: 150px;
+            margin-top: 20px;
+        }
+
+        .bar {
+            width: 40px;
+            background-color: #6a5acd;
+            border-radius: 4px;
+            text-align: center;
+            color: #fff;
+        }
+
+        .bar span {
+            position: relative;
+            top: -20px;
+        }
+
+        /* Feedback Section */
+        .feedback {
+            top: 0;
+            right: 0;
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            width: 250px;
+            z-index: 10;
+        }
+
+
+        .feedback form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .feedback label {
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .feedback input[type="number"] {
+            margin-bottom: 10px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+        }
+
+        .feedback button {
+            padding: 10px;
+            background-color: #6a5acd;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .feedback button:hover {
+            background-color: #5a4ebc;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="My Photo" style="width: 100px; height: auto;">
+        <a href="/student">Dashboard</a>
+        <a href="/student/profile">Profile</a>
+        <a href="/student/event">Event</a>
+        <a href="/student/academic_schedule">Edit Academic Schedule</a>
+        <a href="/">Logout</a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Calendar Section -->
+        <div class="calendar">
+            <h2>Your Calendar</h2>
+            <div id="calendar"></div>
+        </div>
+
+        <!-- Recommended Events Section -->
+        <div class="recommended-events">
+            <div class="feedback">
+            <h2>Recommended Events</h2>
+            <ul class="events-list">
+                {% for event in recommend_events %}
+                <li>{{event}}</li>
+                {% endfor %}
+            </ul>
+            </div>
+            <div class="feedback">
+                <h3>Give Feedback</h3>
+                {% for event in feedback_remaining %}
+                <form action="/student/feedback/{{event.event}}" method="POST">
+                    <label for="event-feedback">{{event.event}} Rating (1-9):</label>
+                    <input type="number" id="event-feedback" name="{{event.event}}-feedback" min="1" max="9" required>
+                    <button type="submit">submit</button>
+                </form>
+                {% endfor %}
+            </div>    
+        </div>
+    </div>
+</body>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const calendarEl = document.getElementById('calendar');
+
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            events: [
+                {% for event in student_events %}
+                {
+                    title: '{{ event.name }}',
+                    start: '{{ event.date }}T{{ event.starttime }}',
+                    end: '{{ event.date }}T{{ event.endtime }}',
+                    description: '{{ event.description }}',
+                    location: '{{ event.venue }}'
+                },
+                {% endfor %}
+            ],
+            eventClick: function (info) {
+                alert(
+                    'Event: ' + info.event.title + '\n' +
+                    'Start Time: ' + info.event.start.toISOString().slice(11, 16) + '\n' +
+                    'End Time: ' + info.event.end.toISOString().slice(11, 16) + '\n' +
+                    'Description: ' + info.event.extendedProps.description + '\n' +
+                    'Location: ' + info.event.extendedProps.location
+                );
+            }
+        });
+
+        calendar.render();
+    });
+</script>
+
+</html>
