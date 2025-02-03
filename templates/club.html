@@ -150,7 +150,6 @@
             width: 100%;
             margin-top: 20px;
         }
-
         /* Modal */
         .modal {
             position: fixed;
@@ -159,16 +158,16 @@
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.5);
-            display: none;
             justify-content: center;
             align-items: center;
         }
 
         .modal-content {
             background-color: white;
-            padding: 30px;
+            margin: auto;
+            padding: 10px;
             border-radius: 10px;
-            width: 500px;
+            width: 700px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
         }
 
@@ -184,12 +183,14 @@
 
         .form-group label {
             font-weight: bold;
-            display: block;
-            margin-bottom: 5px;
+            flex: 0 0 30%;
+            margin-right: 10px;
         }
 
-        .form-group input, .form-group select, .form-group textarea {
-            width: 100%;
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            flex: 1;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 5px;
@@ -215,7 +216,6 @@
         <nav class="dashboard-nav">
             <h1>Club Executive Portal</h1>
             <div class="user-info">
-                <span id="clubName">Your Club Name</span>
                 <button onclick="logout()">Logout</button>
             </div>
         </nav>
@@ -249,46 +249,51 @@
                 <div id="addEventModal" class="modal hidden">
                     <div class="modal-content">
                         <h2>Add New Club Event</h2>
-                        <form id="addEventForm">
+                        <form id="addEventForm" action="/fest" method="POST" enctype="multipart/form-data">
+                            <!-- <input type="email" name="email" placeholder="Email" required>
+                            <input type="password" name="password" placeholder="Password" required> -->
                             <div class="form-group">
-                                <label>Event Title</label>
-                                <input type="text" name="title" required>
+                                <label>Event Name</label>
+                                <input type="text" name="eventName" required>
                             </div>
-                            
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>Start Date</label>
-                                    <input type="datetime-local" name="startDate" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>End Date</label>
-                                    <input type="datetime-local" name="endDate" required>
-                                </div>
-                            </div>
-
+                            <label for="eventPhotoInput"><b>Event Photo</b></label>
+                            <input type="file" name="photo" accept="image/*" id="profilePhotoInput">
                             <div class="form-group">
-                                <label>Venue</label>
-                                <input type="text" name="venue" required>
+                                <label>Organiser</label>
+                                <input type="text" name="organiser" required>
                             </div>
-
+                            <div class="form-group">
+                                <label>add tags (saperate by comma)</label>
+                                <input type="text" name="tags" required>
+                            </div>
                             <div class="form-group">
                                 <label>Description</label>
                                 <textarea name="description" rows="4" required></textarea>
                             </div>
-
                             <div class="form-group">
-                                <label>Maximum Participants</label>
-                                <input type="number" name="maxParticipants">
+                                <label>Date</label>
+                                <input type="date" name="date">
                             </div>
-
                             <div class="form-group">
-                                <label>Registration Deadline</label>
-                                <input type="datetime-local" name="registrationDeadline">
+                                <label>Start Time</label>
+                                <input type="time" name="starttime">
                             </div>
-
+                            <div class="form-group">
+                                <label>End Time</label>
+                                <input type="time" name="endtime">
+                            </div>
+                            <div class="form-group">
+                                <label>Venue</label>
+                                <input type="text" name="venue">
+                            </div>
+                            <div class="form-group">
+                                <label>registration link</label>
+                                <input type="text" name="link">
+                            </div>
                             <div class="form-actions">
-                                <button type="submit" class="primary-btn">Create Event</button>
-                                <button type="button" class="secondary-btn" onclick="closeAddEventModal()">Cancel</button>
+                                <button type="submit" class="primary-btn">Add Event</button>
+                                <button type="button" class="secondary-btn"
+                                    onclick="closeAddEventModal()">Cancel</button>
                             </div>
                         </form>
                     </div>
@@ -300,7 +305,7 @@
     <script>
         function logout() {
             // Implement logout functionality
-            window.location.href = 'login page.html';
+            window.location.href = '/';
         }
 
         function showAddEventModal() {
