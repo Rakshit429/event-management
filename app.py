@@ -11,7 +11,9 @@ from flask import send_from_directory
 from dotenv import load_dotenv
 
 load_dotenv() 
-UPLOAD_FOLDER = 'C:/Users/DELL/Documents/kars/static/uploads'
+UPLOAD_FOLDER = "C:/Users/DELL/Documents/kars/static/uploads\\"
+
+
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -196,33 +198,105 @@ def event_feedback_fun(event):
         db.session.commit()
     return redirect("/student")
        
+# @app.route('/student')
+# def kars_student():
+#     # Get logged-in student's email from the session
+#     student_email = user.email
+#     # Get the student's registered events
+#     selected_event_names = [event.event for event in students_events.query.filter(students_events.entryno==user.entryno).all()]
+#     current_time = datetime.now()
+#     student_events = events.query.filter(events.name.in_(selected_event_names),db.func.datetime(events.date, events.starttime) >= current_time).all()
+#     from sqlalchemy import func
+#     feedback_remaining = (students_events.query.filter(students_events.entryno==user.entryno ,students_events.feedback == 0).all())
+#     for i in feedback_remaining:
+#         j=events.query.filter(events.name==i.event).first()
+#         if datetime.strptime(f"{j.date} {j.starttime}", "%Y-%m-%d %H:%M") >= current_time:
+#             feedback_remaining.remove(i)
+#     print(feedback_remaining)
+#     print(student_events)
+#     # feedback_remaining=students_events.query.filter(feedback==0, db.func.datetime(events.date, events.starttime) <= current_time).all()
+#     return render_template(
+#         'student_protal.html',  
+#         student_events=student_events,
+#         feedback_remaining=feedback_remaining,
+#         recommend_events=recommend_event(5)
+#     )
+
+from flask import session
+from sqlalchemy import func
+from datetime import datetime
 @app.route('/student')
 def kars_student():
-    # Get logged-in student's email from the session
-    student_email = user.email
-    # Get the student's registered events
-    selected_event_names = [event.event for event in students_events.query.filter(students_events.entryno==user.entryno).all()]
+    # Get logged-in student's email & entry number from session
+    student_email= user.email
+    student_entryno = user.entryno
+
+    if not student_email or not student_entryno:
+        return "User not logged in", 401  # Handle unauthorized access
+
+    # Get student's registered events
+    selected_event_names = [event.event for event in students_events.query.filter(students_events.entryno == student_entryno).all()]
+    
     current_time = datetime.now()
-    student_events = events.query.filter(events.name.in_(selected_event_names),db.func.datetime(events.date, events.starttime) >= current_time).all()
-    from sqlalchemy import func
-    feedback_remaining = (students_events.query.filter(students_events.entryno==user.entryno ,students_events.feedback == 0).all())
-    for i in feedback_remaining:
-        j=events.query.filter(events.name==i.event).first()
-        if datetime.strptime(f"{j.date} {j.starttime}", "%Y-%m-%d %H:%M") >= current_time:
-            feedback_remaining.remove(i)
+    
+    # Fetch events where event date & time are in the future
+    student_events = events.query.filter(
+        events.name.in_(selected_event_names),
+        func.strftime('%Y-%m-%d %H:%M', events.date, events.starttime) >= current_time.strftime('%Y-%m-%d %H:%M')
+    ).all()
+
+    # Find events where feedback is not given
+    feedback_remaining = students_events.query.filter(
+        students_events.entryno == student_entryno,
+        students_events.feedback == 0
+    ).all()
+
+    # Filter events where feedback is due for past events
+    feedback_remaining = [
+        i for i in feedback_remaining 
+        if datetime.strptime(
+            f"{events.query.filter(events.name == i.event).first().date} {events.query.filter(events.name == i.event).first().starttime}",
+            "%Y-%m-%d %H:%M"
+        ) < current_time
+    ]
+
     print(feedback_remaining)
     print(student_events)
-    # feedback_remaining=students_events.query.filter(feedback==0, db.func.datetime(events.date, events.starttime) <= current_time).all()
+
     return render_template(
-        'student_protal.html',  
+        'student_protal.html',
         student_events=student_events,
         feedback_remaining=feedback_remaining,
         recommend_events=recommend_event(5)
     )
 
+
 @app.route('/club')
 def kars_club():
-    return render_template('club.html')
+    head_positions=head_Registration.query.filter(head_Registration.organisation_type=="club",head_Registration.headentryno==user.entryno).all()
+    print(len(head_positions))
+    if head_positions:
+        if request.method=='POST':
+            print("post2")
+            name = request.form['eventName']
+            organiser = request.form['organiser']
+            description = request.form['description']
+            date = request.form['date']
+            starttime = request.form['starttime']
+            endtime = request.form['endtime']
+            venue = request.form['venue']
+            link= request.form["link"]
+            tags=request.form["tags"]
+            photo = request.files["photo"]
+            filename = secure_filename(photo.filename)  # Sanitize the filename
+            file_path = os.path.join(UPLOAD_FOLDER, filename)
+            photo.save(file_path)
+            event = events(name = name, photo =filename, organiser = organiser, description = description, date = date, venue = venue, starttime= starttime, endtime= endtime ,link=link,tags=tags)
+            db.session.add(event)
+            db.session.commit()
+        return render_template('club.html',head_positions=head_positions)
+    else:
+        return "you are not eligible"
 
 @app.route('/department')
 def kars_department():
@@ -300,7 +374,7 @@ def kars_fest():
             tags=request.form["tags"]
             photo = request.files["photo"]
             filename = secure_filename(photo.filename)  # Sanitize the filename
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file_path = os.path.join(UPLOAD_FOLDER, filename)
             photo.save(file_path)
             event = events(name = name, photo =filename, organiser = organiser, description = description, date = date, venue = venue, starttime= starttime, endtime= endtime ,link=link,tags=tags)
             db.session.add(event)
