@@ -9,10 +9,6 @@ import random
 import os 
 from flask import send_from_directory
 from dotenv import load_dotenv
-# import pandas as pd
-# from sklearn.metrics.pairwise import cosine_similarity
-# from sklearn.feature_extraction.text import CountVectorizer
-# import numpy as np
 
 load_dotenv() 
 UPLOAD_FOLDER = 'C:/Users/DELL/Documents/kars/static/uploads'
@@ -25,51 +21,12 @@ db = SQLAlchemy(app)
 migrate=Migrate(app,db)
 
 from flask import session
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-import numpy as np
 import json
 
 def recommend_event(top_n=5):
-    """ Recommends events to a user based on interests using TF-IDF and Cosine Similarity. """
+    """ Recommends the top N events based on their order in the database. """
+    return events.query.limit(top_n).all()
 
-    user_entryno=user.interest
-
-    if user.interest == "null":
-        return events.query.first(top_n)  # Return empty if no interests are found
-
-    # Convert stored interests from JSON string to list
-    user_interests = json.loads(user.interest)
-
-    # Fetch all available events from the database
-    all_events = events.query.all()
-
-    if not all_events:
-        return []  # Return empty if no events exist
-
-    # Prepare event data
-    event_names = [event.name for event in all_events]
-    event_tags = [event.tags for event in all_events]  # Tags are used for recommendation
-
-    # Convert user interests and event tags into text format for vectorization
-    all_texts = [' '.join(user_interests)] + event_tags
-
-    # Convert text data to TF-IDF vectors
-    vectorizer = TfidfVectorizer(stop_words='english')
-    tfidf_matrix = vectorizer.fit_transform(all_texts)
-
-    # Compute cosine similarity between user interests (first row) and all event tags
-    similarity_scores = cosine_similarity(tfidf_matrix[0], tfidf_matrix[1:]).flatten()
-
-    # Get the top N recommended event indices
-    top_indices = similarity_scores.argsort()[::-1][:top_n]
-
-    
-
-    # Get event names based on top indices
-    recommended_events = [event_names[i] for i in top_indices]
-
-    return recommended_events
 
 
 def json_to_list(json):
