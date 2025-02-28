@@ -82,7 +82,6 @@ class course_events(db.Model):
 @app.route('/', methods=['GET', 'POST'])
 def kars_registration():
     if request.method=='POST':
-        print("post")
         name = request.form['name']
         email = request.form['email']
         entryno=f"20{email[3:5]}{email[:2].upper()}{email[2]}{email[5:9]}"
@@ -140,9 +139,7 @@ def kars_login():
 @app.route('/student/feedback/<string:event>', methods=['GET', 'POST'])
 def event_feedback_fun(event):
     event__name=event
-    print(event__name)
     if request.method=='POST':
-        print(event__name)
         event___feedback = request.form[f'{event__name}-feedback']
         event__feedback = students_events.query.filter_by(event=event__name,entryno=user.entryno).first()
         event__feedback.feedback = event___feedback
@@ -164,8 +161,6 @@ def kars_student():
         j=events.query.filter(events.name==i.event).first()
         if datetime.strptime(f"{j.date} {j.starttime}", "%Y-%m-%d %H:%M") >= current_time:
             feedback_remaining.remove(i)
-    print(feedback_remaining)
-    print(student_events)
     # feedback_remaining=students_events.query.filter(feedback==0, db.func.datetime(events.date, events.starttime) <= current_time).all()
     return render_template(
         'student_protal.html',  
@@ -228,7 +223,6 @@ def add_event(name):
 @app.route('/fest', methods=['GET', 'POST'])
 def kars_fest():
     if request.method=='POST':
-        print("post2")
         name = request.form['eventName']
         organiser = request.form['organiser']
         description = request.form['description']
