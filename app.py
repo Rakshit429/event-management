@@ -182,24 +182,32 @@ def kars_department():
 
 @app.route('/student/profile', methods=['GET', 'POST'])
 def kars_profile():
-    if request.method=='POST':
+    if request.method == 'POST':
         interests = request.form.getlist('interests')
         if interests:
             interests_json = json.dumps(interests)
-            user.interest=interests_json
-        photo = request.files['photo']
-        if photo:
-            filename = secure_filename(photo.filename)  # Sanitize the filename
+            user.interest = interests_json
+        
+        photo = request.files.get('photo')
+        if photo and photo.filename:
+            filename = secure_filename(photo.filename)
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            photo.save(file_path)
-            user.photo=filename
-        department = request.form['department']
+            
+            # Ensure the upload folder exists
+            os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+            
+            print(f"Saving file to: {file_path}")  # Debugging line
+            photo.save(file_path)  # Save file safely
+            user.photo = filename
+        
+        department = request.form.get('department')
         if department:
-            user.department=department
+            user.department = department
+        
         db.session.add(user)
         db.session.commit()
-    return render_template('profile.html',User=user,interests=json_to_list(user.interest))
-
+    
+    return render_template('profile.html', User=user, interests=json_to_list(user.interest))
 
 @app.route('/student/event')
 def kars_event():
