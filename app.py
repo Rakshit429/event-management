@@ -9,11 +9,13 @@ import random
 import os 
 from flask import send_from_directory
 from dotenv import load_dotenv
+# import pandas as pd
+# from sklearn.metrics.pairwise import cosine_similarity
+# from sklearn.feature_extraction.text import CountVectorizer
+# import numpy as np
 
 load_dotenv() 
-UPLOAD_FOLDER = "C:/Users/DELL/Documents/kars/static/uploads\\"
-
-
+UPLOAD_FOLDER = 'C:/Users/DELL/Documents/kars/static/uploads'
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -28,15 +30,14 @@ from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 import json
 
-def recommend_event(top_n):
+def recommend_event(top_n=5):
     """ Recommends events to a user based on interests using TF-IDF and Cosine Similarity. """
 
     user_entryno=user.interest
 
-    # Return empty if no interests are found
     if user.interest == "null":
-        return events.query.limit(top_n).all()
-  
+        return events.query.first(top_n)  # Return empty if no interests are found
+
     # Convert stored interests from JSON string to list
     user_interests = json.loads(user.interest)
 
@@ -70,6 +71,7 @@ def recommend_event(top_n):
 
     return recommended_events
 
+
 def json_to_list(json):
     result=json[1:-1].split(",")
     result[0]=result[0][1:-1]
@@ -82,11 +84,7 @@ def add_event(entryno,event):
     db.session.add(add_to_students_events)
     db.session.commit()
 
-class head_Registration(db.Model):
-    __tablename__ = "head_registration"
-    organisation=db.Column(db.String(50), primary_key=True)
-    organisation_type=db.Column(db.String(50),nullable=True)
-    headentryno = db.Column(db.String(11),nullable=True)
+
 
 class Registration(db.Model):
     entryno = db.Column(db.String(11), primary_key=True)
@@ -115,11 +113,6 @@ class students_events(db.Model):
     event=db.Column(db.String(40))
     entryno=db.Column(db.String(11))
     feedback=db.Column(db.Integer)
-
-class students_courses(db.Model):
-    srno=db.Column(db.Integer, primary_key=True)
-    course=db.Column(db.String(12))
-    entryno=db.Column(db.String(11))
 
 class course_events(db.Model):
     name = db.Column(db.String(40), primary_key=True)
@@ -159,6 +152,7 @@ def kars_registration():
             return "enter valid email"
     return render_template('index.html')
 
+
 @app.route('/verify-otp', methods=['GET', 'POST'])
 def opt_check():
         if request.method=='POST':
@@ -169,6 +163,7 @@ def opt_check():
             else:
                 "try again"
         return render_template('otp.html')
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def kars_login():
@@ -198,73 +193,25 @@ def event_feedback_fun(event):
         db.session.commit()
     return redirect("/student")
        
-# @app.route('/student')
-# def kars_student():
-#     # Get logged-in student's email from the session
-#     student_email = user.email
-#     # Get the student's registered events
-#     selected_event_names = [event.event for event in students_events.query.filter(students_events.entryno==user.entryno).all()]
-#     current_time = datetime.now()
-#     student_events = events.query.filter(events.name.in_(selected_event_names),db.func.datetime(events.date, events.starttime) >= current_time).all()
-#     from sqlalchemy import func
-#     feedback_remaining = (students_events.query.filter(students_events.entryno==user.entryno ,students_events.feedback == 0).all())
-#     for i in feedback_remaining:
-#         j=events.query.filter(events.name==i.event).first()
-#         if datetime.strptime(f"{j.date} {j.starttime}", "%Y-%m-%d %H:%M") >= current_time:
-#             feedback_remaining.remove(i)
-#     print(feedback_remaining)
-#     print(student_events)
-#     # feedback_remaining=students_events.query.filter(feedback==0, db.func.datetime(events.date, events.starttime) <= current_time).all()
-#     return render_template(
-#         'student_protal.html',  
-#         student_events=student_events,
-#         feedback_remaining=feedback_remaining,
-#         recommend_events=recommend_event(5)
-#     )
-
-from flask import session
-from sqlalchemy import func
-from datetime import datetime
 @app.route('/student')
 def kars_student():
-    # Get logged-in student's email & entry number from session
-    student_email= user.email
-    student_entryno = user.entryno
-
-    if not student_email or not student_entryno:
-        return "User not logged in", 401  # Handle unauthorized access
-
-    # Get student's registered events
-    selected_event_names = [event.event for event in students_events.query.filter(students_events.entryno == student_entryno).all()]
-    
+    # Get logged-in student's email from the session
+    student_email = user.email
+    # Get the student's registered events
+    selected_event_names = [event.event for event in students_events.query.filter(students_events.entryno==user.entryno).all()]
     current_time = datetime.now()
-    
-    # Fetch events where event date & time are in the future
-    student_events = events.query.filter(
-        events.name.in_(selected_event_names),
-        func.strftime('%Y-%m-%d %H:%M', events.date, events.starttime) >= current_time.strftime('%Y-%m-%d %H:%M')
-    ).all()
-
-    # Find events where feedback is not given
-    feedback_remaining = students_events.query.filter(
-        students_events.entryno == student_entryno,
-        students_events.feedback == 0
-    ).all()
-
-    # Filter events where feedback is due for past events
-    feedback_remaining = [
-        i for i in feedback_remaining 
-        if datetime.strptime(
-            f"{events.query.filter(events.name == i.event).first().date} {events.query.filter(events.name == i.event).first().starttime}",
-            "%Y-%m-%d %H:%M"
-        ) < current_time
-    ]
-
+    student_events = events.query.filter(events.name.in_(selected_event_names),db.func.datetime(events.date, events.starttime) >= current_time).all()
+    from sqlalchemy import func
+    feedback_remaining = (students_events.query.filter(students_events.entryno==user.entryno ,students_events.feedback == 0).all())
+    for i in feedback_remaining:
+        j=events.query.filter(events.name==i.event).first()
+        if datetime.strptime(f"{j.date} {j.starttime}", "%Y-%m-%d %H:%M") >= current_time:
+            feedback_remaining.remove(i)
     print(feedback_remaining)
     print(student_events)
-
+    # feedback_remaining=students_events.query.filter(feedback==0, db.func.datetime(events.date, events.starttime) <= current_time).all()
     return render_template(
-        'student_protal.html',
+        'student_protal.html',  
         student_events=student_events,
         feedback_remaining=feedback_remaining,
         recommend_events=recommend_event(5)
@@ -273,34 +220,13 @@ def kars_student():
 
 @app.route('/club')
 def kars_club():
-    head_positions=head_Registration.query.filter(head_Registration.organisation_type=="club",head_Registration.headentryno==user.entryno).all()
-    print(len(head_positions))
-    if head_positions:
-        if request.method=='POST':
-            print("post2")
-            name = request.form['eventName']
-            organiser = request.form['organiser']
-            description = request.form['description']
-            date = request.form['date']
-            starttime = request.form['starttime']
-            endtime = request.form['endtime']
-            venue = request.form['venue']
-            link= request.form["link"]
-            tags=request.form["tags"]
-            photo = request.files["photo"]
-            filename = secure_filename(photo.filename)  # Sanitize the filename
-            file_path = os.path.join(UPLOAD_FOLDER, filename)
-            photo.save(file_path)
-            event = events(name = name, photo =filename, organiser = organiser, description = description, date = date, venue = venue, starttime= starttime, endtime= endtime ,link=link,tags=tags)
-            db.session.add(event)
-            db.session.commit()
-        return render_template('club.html',head_positions=head_positions)
-    else:
-        return "you are not eligible"
+    return render_template('club.html')
+
 
 @app.route('/department')
 def kars_department():
     return render_template('department.html')
+
 
 @app.route('/student/profile', methods=['GET', 'POST'])
 def kars_profile():
@@ -322,12 +248,18 @@ def kars_profile():
         db.session.commit()
     return render_template('profile.html',User=user,interests=json_to_list(user.interest))
 
+
 @app.route('/student/event')
 def kars_event():
     current_time = datetime.now()
-    selected_event_names = [event.event for event in students_events.query.filter(students_events.entryno==user.entryno).all()]
+    selected_event_names = [event.event for event in students_events.query.all()]
     Events =events.query.filter(events.name.notin_(selected_event_names),db.func.datetime(events.date, events.starttime) >= current_time).all()
     return render_template('event.html',Events=Events)
+
+
+@app.route('/student/academic_schedule')
+def kars_schedule():
+    return render_template('academic_schedule.html')
 
 @app.route('/add_event/<string:name>')
 def add_event(name):
@@ -336,56 +268,33 @@ def add_event(name):
     db.session.commit()
     return redirect("/student/event")
 
-@app.route('/student/academic_schedule')
-def kars_schedule():
-    courseList = [selected_course.course for selected_course in students_courses.query.filter(students_courses.entryno==user.entryno).all()]
-    return render_template('academic_schedule.html',courseList=courseList)
-
-@app.route('/student/academic_schedule/remove_course/<string:name>')
-def remove_event(name):
-    course_remove=students_courses.query.filter(students_courses.entryno==user.entryno,students_courses.course==name).first()
-    db.session.delete(course_remove)
-    db.session.commit()
-    return redirect("/student/academic_schedule")
-
-@app.route('/student/academic_schedule/add_course', methods=['GET', 'POST'])
-def add_course():
-    name = request.form['courseName']
-    add_to_students_courses=students_courses(course=name, entryno=user.entryno)
-    db.session.add(add_to_students_courses)
-    db.session.commit()
-    return redirect('/student/academic_schedule')
-
 @app.route('/fest', methods=['GET', 'POST'])
 def kars_fest():
-    head_positions=head_Registration.query.filter(head_Registration.organisation_type=="fest",head_Registration.headentryno==user.entryno).all()
-    print(len(head_positions))
-    if head_positions:
-        if request.method=='POST':
-            print("post2")
-            name = request.form['eventName']
-            organiser = request.form['organiser']
-            description = request.form['description']
-            date = request.form['date']
-            starttime = request.form['starttime']
-            endtime = request.form['endtime']
-            venue = request.form['venue']
-            link= request.form["link"]
-            tags=request.form["tags"]
-            photo = request.files["photo"]
-            filename = secure_filename(photo.filename)  # Sanitize the filename
-            file_path = os.path.join(UPLOAD_FOLDER, filename)
-            photo.save(file_path)
-            event = events(name = name, photo =filename, organiser = organiser, description = description, date = date, venue = venue, starttime= starttime, endtime= endtime ,link=link,tags=tags)
-            db.session.add(event)
-            db.session.commit()
-        return render_template('fest.html',head_positions=head_positions)
-    else:
-        return "you are not eligible" 
+    if request.method=='POST':
+        print("post2")
+        name = request.form['eventName']
+        organiser = request.form['organiser']
+        description = request.form['description']
+        date = request.form['date']
+        starttime = request.form['starttime']
+        endtime = request.form['endtime']
+        venue = request.form['venue']
+        link= request.form["link"]
+        tags=request.form["tags"]
+        photo = request.files["photo"]
+        filename = secure_filename(photo.filename)  # Sanitize the filename
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        photo.save(file_path)
+        event = events(name = name, photo =filename, organiser = organiser, description = description, date = date, venue = venue, starttime= starttime, endtime= endtime ,link=link,tags=tags)
+        db.session.add(event)
+        db.session.commit()
+    return render_template('fest.html')
+
   
 @app.route('/course-coordinator')
 def kars_course():
     return render_template('course.html')
+
 
 if __name__ == "__main__":
     app.run(debug=True)

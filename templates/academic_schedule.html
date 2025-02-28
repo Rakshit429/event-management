@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,7 +12,6 @@
             height: 100vh;
             background-color: #ffffff;
         }
-
         /* Sidebar */
         .sidebar {
             width: 250px;
@@ -25,12 +23,10 @@
             align-items: center;
             padding-top: 20px;
         }
-
         .sidebar img {
             width: 100px;
             margin-bottom: 20px;
         }
-
         .sidebar a {
             text-decoration: none;
             color: #fff;
@@ -39,7 +35,6 @@
             display: block;
             text-align: center;
         }
-
         .sidebar a:hover {
             background-color: #575b71;
             width: 100%;
@@ -110,56 +105,8 @@
         .add-course button:hover {
             background-color: #4b32b3;
         }
-
-        /* Dropdown Container */
-        .dropdown {
-            position: relative;
-            display: inline-block;
-        }
-
-        /* Dropdown Button */
-        .dropbtn {
-            background-color: #5D3FD3;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 5px 10px;
-            cursor: pointer;
-        }
-
-        .dropbtn:hover {
-            background-color: #4b32b3;
-        }
-
-        /* Dropdown Content */
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            background-color: white;
-            min-width: 120px;
-            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
-            z-index: 1;
-            border-radius: 5px;
-        }
-
-        .dropdown-content a {
-            color: black;
-            padding: 10px;
-            text-decoration: none;
-            display: block;
-        }
-
-        .dropdown-content a:hover {
-            background-color: #f1f1f1;
-        }
-
-        /* Show Dropdown on Click */
-        .dropdown:hover .dropdown-content {
-            display: block;
-        }
     </style>
 </head>
-
 <body>
     <!-- Sidebar -->
     <div class="sidebar">
@@ -173,31 +120,33 @@
     <div class="content">
         <h1>academic schedule</h1>
         <ul class="course-list" id="courseList">
-            {% for course in courseList %}
-            <li>
-                {{course}}
-                <a href="/student/academic_schedule/remove_course/{{course}}">
-                    <button type="button">Remove Course</button>
-                </a>
-<!-- 
-                Resource Button with Dropdown
-                <div class="dropdown">
-                    <button class="dropbtn">Resource</button>
-                    <div class="dropdown-content">
-                        <a href="{{ url_for('static', filename='pyp/' + course + '.pdf') }}" target="_blank">PYP</a>
-                        <a href="/resources/py_notes/{{course}}">PY Notes</a>
-                    </div>
-                </div> -->
-            </li>
-            {% endfor %}
+            <!-- Courses will appear here -->
         </ul>
         <div class="add-course">
-            <form action="/student/academic_schedule/add_course" method="POST">
-                <input type="text" id="courseInput" name="courseName" placeholder="Enter course name">
-                <button type="submit">Add Course</button>
-            </form>
+            <input type="text" id="courseInput" placeholder="Enter course name">
+            <button onclick="addCourse()">Add Course</button>
         </div>
     </div>
-</body>
 
+    <script>
+        const courseList = document.getElementById('courseList');
+
+        function addCourse() {
+            const courseInput = document.getElementById('courseInput');
+            const courseName = courseInput.value.trim();
+
+            if (courseName) {
+                const listItem = document.createElement('li');
+                listItem.innerHTML = `${courseName} <button onclick="removeCourse(this)">Remove</button>`;
+                courseList.appendChild(listItem);
+                courseInput.value = '';
+            }
+        }
+
+        function removeCourse(button) {
+            const listItem = button.parentElement;
+            courseList.removeChild(listItem);
+        }
+    </script>
+</body>
 </html>
